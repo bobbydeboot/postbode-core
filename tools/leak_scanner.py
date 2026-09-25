@@ -43,11 +43,14 @@ def scan(root: Path) -> dict[str, object]:
         "dist",
         "postbode_core.egg-info",
     }
-    for path in sorted(
-        p
-        for p in root.rglob("*")
-        if p.is_file() and not ignored_dirs.intersection(p.parts)
-    ):
+
+    def is_ignored(path: Path) -> bool:
+        return any(
+            part in ignored_dirs or part.startswith(".pytest-temp")
+            for part in path.parts
+        )
+
+    for path in sorted(p for p in root.rglob("*") if p.is_file() and not is_ignored(p)):
         try:
             text = path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
@@ -76,9 +79,7 @@ def scan(root: Path) -> dict[str, object]:
         "pass": not findings,
         "findings": findings,
         "files_scanned": sum(
-            1
-            for p in root.rglob("*")
-            if p.is_file() and not ignored_dirs.intersection(p.parts)
+            1 for p in root.rglob("*") if p.is_file() and not is_ignored(p)
         ),
     }
 
