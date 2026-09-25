@@ -34,8 +34,19 @@ GENERIC_VALUES = {"UC_EXAMPLE_CHANNEL_ID"}
 
 def scan(root: Path) -> dict[str, object]:
     findings: list[dict[str, str]] = []
+    ignored_dirs = {
+        ".git",
+        ".pytest-temp",
+        ".pytest_cache",
+        "__pycache__",
+        "build",
+        "dist",
+        "postbode_core.egg-info",
+    }
     for path in sorted(
-        p for p in root.rglob("*") if p.is_file() and ".git" not in p.parts
+        p
+        for p in root.rglob("*")
+        if p.is_file() and not ignored_dirs.intersection(p.parts)
     ):
         try:
             text = path.read_text(encoding="utf-8")
@@ -65,7 +76,9 @@ def scan(root: Path) -> dict[str, object]:
         "pass": not findings,
         "findings": findings,
         "files_scanned": sum(
-            1 for p in root.rglob("*") if p.is_file() and ".git" not in p.parts
+            1
+            for p in root.rglob("*")
+            if p.is_file() and not ignored_dirs.intersection(p.parts)
         ),
     }
 
