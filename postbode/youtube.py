@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import uuid
 import urllib.error
 import urllib.request
 from collections.abc import Callable
@@ -39,15 +40,19 @@ class YouTubeTransport:
         self._request_fn = request_fn
 
     def _request(
-        self, method: str, url: str, body: bytes | None = None
+        self,
+        method: str,
+        url: str,
+        body: bytes | None = None,
+        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         if self._request_fn:
-            return self._request_fn(method, url, body=body)
+            return self._request_fn(method, url, body=body, headers=headers)
+        request_headers = {"Authorization": f"Bearer {self._access_token}"}
+        if headers:
+            request_headers.update(headers)
         request = urllib.request.Request(
-            url,
-            data=body,
-            method=method,
-            headers={"Authorization": f"Bearer {self._access_token}"},
+            url, data=body, method=method, headers=request_headers
         )
         try:
             with urllib.request.urlopen(request, timeout=30) as response:
@@ -67,9 +72,36 @@ class YouTubeTransport:
         return item["id"], snippet.get("customUrl")
 
     def upload_private(self, request: PublicationRequest) -> str:
-        raise PublicationError(
-            "multipart upload requires an application-specific transport"
+        metadata = json.dumps(
+            build_upload_metadata(request), separators=(",", ":")
+        ).encode()
+        media = request.artifact_path.read_bytes()
+        boundary = f"postbode-{uuid.uuid4().hex}"
+        delimiter = boundary.encode()
+        body = b"".join(
+            (
+                b"--" + delimiter + b"\r\n",
+                b"Content-Type: application/json; charset=UTF-8\r\n\r\n",
+                metadata,
+                b"\r\n--" + delimiter + b"\r\n",
+                b"Content-Type: video/mp4\r\n\r\n",
+                media,
+                b"\r\n--" + delimiter + b"--\r\n",
+            )
         )
+        payload = self._request(
+            "POST",
+            "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=multipart&part=snippet,status",
+            body=body,
+            headers={
+                "Content-Type": f"multipart/related; boundary={boundary}",
+                "Content-Length": str(len(body)),
+            },
+        )
+        provider_id = payload.get("id")
+        if not provider_id:
+            raise PublicationError("provider upload response did not contain an ID")
+        return str(provider_id)
 
     def video(self, video_id: str) -> dict[str, Any]:
         return self._request(
