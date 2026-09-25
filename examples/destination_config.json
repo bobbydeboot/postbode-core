@@ -1,0 +1,7 @@
+{
+  "destination_id": "example-destination",
+  "platform": "youtube",
+  "expected_channel_id": "UC_EXAMPLE_CHANNEL_ID",
+  "expected_channel_handle": "@examplechannel",
+  "credential_alias": "youtube-example"
+}
