@@ -35,16 +35,15 @@ The following creates a local plan and performs no provider mutation:
 
 ```python
 from pathlib import Path
-import hashlib
 
-from postbode import DestinationPolicy, PublicationRequest, build_plan
+from postbode import DestinationPolicy, PublicationRequest, build_plan, sha256_file
 
 artifact = Path("examples/fake-media.mp4")
 request = PublicationRequest(
     destination_id="example-destination",
     platform="youtube",
     artifact_path=artifact,
-    artifact_sha256=hashlib.sha256(artifact.read_bytes()).hexdigest(),
+    artifact_sha256=sha256_file(artifact),
     title="Example upload",
     description="A local dry-run example.",
     privacy_status="private",
@@ -59,19 +58,19 @@ print(plan.request_identity)
 ## Safety model
 
 Provider mutations require an application-supplied authenticated transport and
-explicit authority where applicable. The YouTube transport can build and send
-a private multipart upload, but applications still own token acquisition and
-authorization. The package does not silently retry an ambiguous submission or
-treat a plan as proof of remote state; it performs provider readback after a
-write. Use a fake transport in tests.
+explicit authority where applicable. The YouTube transport uses a bounded-memory
+resumable upload for private video publication, but applications still own token
+acquisition and authorization. The package does not blindly retry an ambiguous
+submission: it reconciles provider-reported resumable progress first and keeps
+the publication receipt fail-closed. Use a fake transport in tests.
 
 ## Supported capabilities
 
 The public core currently provides validated YouTube request contracts,
 destination policies, deterministic plans, safe credential fingerprints,
 secret-free receipts, injectable YouTube channel/video readback transport,
-private multipart upload support, generic asset descriptor validation, and
-generic channel-branding data validation.
+bounded-memory resumable YouTube upload support, generic asset descriptor
+validation, and generic channel-branding data validation.
 
 ## Non-goals
 
