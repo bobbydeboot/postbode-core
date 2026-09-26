@@ -1,5 +1,5 @@
-from pathlib import Path
 import hashlib
+from pathlib import Path
 
 from postbode import DestinationPolicy, PublicationRequest, build_plan
 

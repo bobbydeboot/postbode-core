@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 import json
-import uuid
 import urllib.error
 import urllib.request
+import uuid
 from collections.abc import Callable
 from typing import Any
 
+from . import receipts
 from .authority import PublicationAuthority
 from .contracts import PublicationError, PublicationReceipt, PublicationRequest
 from .destination import DestinationPolicy
-from . import receipts
 
 
 def build_upload_metadata(request: PublicationRequest) -> dict[str, Any]:
@@ -141,23 +141,20 @@ def publish_plan(
         plan.idempotency_key,
     )
     receipts.write_receipt(started)
-    try:
-        provider_id = transport.upload_private(
-            PublicationRequest(
-                plan.destination_id,
-                "youtube",
-                __import__("pathlib").Path(plan.artifact_path),
-                plan.artifact_sha256,
-                plan.title,
-                plan.description,
-                plan.privacy_status,
-                plan.idempotency_key,
-                True,
-                plan.tags,
-            )
+    provider_id = transport.upload_private(
+        PublicationRequest(
+            plan.destination_id,
+            "youtube",
+            __import__("pathlib").Path(plan.artifact_path),
+            plan.artifact_sha256,
+            plan.title,
+            plan.description,
+            plan.privacy_status,
+            plan.idempotency_key,
+            True,
+            plan.tags,
         )
-    except Exception:
-        raise
+    )
     readback = transport.video(provider_id)
     returned_channel = readback.get("snippet", {}).get("channelId")
     returned_privacy = readback.get("status", {}).get("privacyStatus")

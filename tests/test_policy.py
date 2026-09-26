@@ -12,17 +12,17 @@ from postbode.plan import build_plan, metadata_digest
 def make_request(tmp_path, **changes):
     asset = tmp_path / "asset.bin"
     asset.write_bytes(b"payload")
-    values = dict(
-        destination_id="example-destination",
-        platform="youtube",
-        artifact_path=asset,
-        artifact_sha256=hashlib.sha256(b"payload").hexdigest(),
-        title="Example",
-        description="Safe",
-        privacy_status="private",
-        idempotency_key="key-1",
-        explicit_authority=True,
-    )
+    values = {
+        "destination_id": "example-destination",
+        "platform": "youtube",
+        "artifact_path": asset,
+        "artifact_sha256": hashlib.sha256(b"payload").hexdigest(),
+        "title": "Example",
+        "description": "Safe",
+        "privacy_status": "private",
+        "idempotency_key": "key-1",
+        "explicit_authority": True,
+    }
     values.update(changes)
     return PublicationRequest(**values)
 
