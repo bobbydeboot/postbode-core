@@ -9,10 +9,22 @@ from typing import Literal
 
 PublicationStatus = Literal["private", "unlisted", "public"]
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
+DEFAULT_HASH_CHUNK_SIZE = 1024 * 1024
 
 
 class PublicationError(ValueError):
     """A request cannot safely proceed."""
+
+
+def sha256_file(path: Path, chunk_size: int = DEFAULT_HASH_CHUNK_SIZE) -> str:
+    """Return a file digest without loading the complete file into memory."""
+    if chunk_size <= 0:
+        raise PublicationError("hash chunk size must be positive")
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(chunk_size), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 @dataclass(frozen=True)
@@ -42,10 +54,7 @@ class PublicationRequest:
             raise PublicationError("artifact does not exist")
         if not _SHA256.fullmatch(self.artifact_sha256):
             raise PublicationError("artifact_sha256 must be a lowercase SHA-256")
-        if (
-            hashlib.sha256(self.artifact_path.read_bytes()).hexdigest()
-            != self.artifact_sha256
-        ):
+        if sha256_file(self.artifact_path) != self.artifact_sha256:
             raise PublicationError("artifact SHA-256 does not match request")
         if not self.idempotency_key.strip():
             raise PublicationError("idempotency_key is required")
