@@ -8,17 +8,17 @@ from postbode.contracts import PublicationError, PublicationRequest
 def request(tmp_path, **changes):
     artifact = tmp_path / "asset.bin"
     artifact.write_bytes(b"safe bytes")
-    values = dict(
-        destination_id="example-destination",
-        platform="youtube",
-        artifact_path=artifact,
-        artifact_sha256=hashlib.sha256(b"safe bytes").hexdigest(),
-        title="Example",
-        description="Description",
-        privacy_status="private",
-        idempotency_key="example-content-001",
-        explicit_authority=True,
-    )
+    values = {
+        "destination_id": "example-destination",
+        "platform": "youtube",
+        "artifact_path": artifact,
+        "artifact_sha256": hashlib.sha256(b"safe bytes").hexdigest(),
+        "title": "Example",
+        "description": "Description",
+        "privacy_status": "private",
+        "idempotency_key": "example-content-001",
+        "explicit_authority": True,
+    }
     values.update(changes)
     return PublicationRequest(**values)
 

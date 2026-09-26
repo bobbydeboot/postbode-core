@@ -4,10 +4,10 @@ import hashlib
 import json
 from dataclasses import asdict, dataclass
 
+from . import receipts
 from .authority import PublicationAuthority
 from .contracts import PublicationError, PublicationRequest
 from .destination import DestinationPolicy
-from . import receipts
 
 
 @dataclass(frozen=True)

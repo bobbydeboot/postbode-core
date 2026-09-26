@@ -14,4 +14,4 @@ def test_past_schedule_rejected():
 
 def test_naive_schedule_rejected():
     with pytest.raises(PublicationError, match="timezone"):
-        validate_schedule(datetime.now())
+        validate_schedule(datetime.now(UTC).replace(tzinfo=None))

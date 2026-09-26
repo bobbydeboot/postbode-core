@@ -58,17 +58,20 @@ print(plan.request_identity)
 
 ## Safety model
 
-Provider mutations require an application-supplied transport and explicit
-authority where applicable. The package does not silently upload, retry an
-ambiguous submission, or treat a plan as proof of remote state. Use a fake
-transport in tests and perform a provider readback after each write.
+Provider mutations require an application-supplied authenticated transport and
+explicit authority where applicable. The YouTube transport can build and send
+a private multipart upload, but applications still own token acquisition and
+authorization. The package does not silently retry an ambiguous submission or
+treat a plan as proof of remote state; it performs provider readback after a
+write. Use a fake transport in tests.
 
 ## Supported capabilities
 
 The public core currently provides validated YouTube request contracts,
 destination policies, deterministic plans, safe credential fingerprints,
-secret-free receipts, injectable YouTube readback transport, generic asset
-descriptor validation, and generic channel-branding data validation.
+secret-free receipts, injectable YouTube channel/video readback transport,
+private multipart upload support, generic asset descriptor validation, and
+generic channel-branding data validation.
 
 ## Non-goals
 
